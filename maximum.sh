@@ -16,4 +16,10 @@ echo "Playing Radio Maximum Moscow, program version $VERSION"
 CURRENT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 INTERPRETER="$CURRENT_DIR/venv/bin/python"
 SCRIPT="$CURRENT_DIR/main.py"
+if [ ! -d "$INTERPRETER" ]
+then
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+fi
 bash -c "$INTERPRETER $SCRIPT"
