@@ -20,6 +20,6 @@ if [ ! -d "$INTERPRETER" ]
 then
     python3 -m venv venv
     source venv/bin/activate
-    pip install -r requirements.txt
+    pip install -r "$CURRENT_DIR/requirements.txt" > /dev/null
 fi
 bash -c "$INTERPRETER $SCRIPT"
