@@ -10,7 +10,7 @@ trap stop TERM
 
 cvlc https://maximum.hostingradio.ru/maximum96.aacp -d --pidfile /tmp/vlcpid
 
-VERSION="1.1"
+VERSION="1.2"
 echo "Playing Radio Maximum Moscow, program version $VERSION"
 
 CURRENT_DIR="$(dirname "${BASH_SOURCE[0]}")"

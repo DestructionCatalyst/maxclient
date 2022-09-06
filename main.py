@@ -3,6 +3,7 @@ import sys
 from abc import ABC, abstractmethod
 from time import sleep
 from datetime import datetime
+from typing import Optional
 
 LONG_DASH = "\u2014"
 CHANNEL_HASH = "add441ad-4aaf-440f-9231-53a08eedd2eb"
@@ -12,7 +13,7 @@ HEADERS = {
 times = 0
 
 
-def get_channel_data() -> dict:
+def get_channel_data() -> Optional[dict]:
     if len(sys.argv) > 1 and sys.argv[1].lower() == "test":
         global times
         from test import data
@@ -20,9 +21,13 @@ def get_channel_data() -> dict:
         # print(data[times - 1]["test"], file=sys.stderr)
         return data[times - 1]["test"]
     else:
-        result = requests.get("https://maximum.ru/api/radio/current", headers=HEADERS)
-        result.raise_for_status()
-        return result.json()[CHANNEL_HASH]
+        try:
+            result = requests.get("https://maximum.ru/api/radio/current", headers=HEADERS)
+            result.raise_for_status()
+        except requests.ConnectionError:
+            return None
+        else:
+            return result.json()[CHANNEL_HASH]
 
 
 class BaseTrack(ABC):
@@ -37,6 +42,7 @@ class BaseTrack(ABC):
     @abstractmethod
     def __eq__(self, other):
         pass
+
 
 class Track(BaseTrack):
     def __init__(self, track_data: dict):
@@ -71,6 +77,17 @@ class NoTrack(BaseTrack):
         return isinstance(other, NoTrack)
 
 
+class CantLoadTrack(BaseTrack):
+    def format_as_playlist(self, time=None):
+        return ""
+
+    def format_as_current(self):
+        return f"~~~ Connection error, could not load playlist ~~~\n"
+
+    def __eq__(self, other):
+        return isinstance(other, NoTrack)
+
+
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         CHANNEL_HASH = sys.argv[1]
@@ -90,7 +107,9 @@ if __name__ == '__main__':
             sleep(60)
             # load data
             channel_data = get_channel_data()
-            if channel_data["current_track"]:
+            if not channel_data:
+                new_cur_track = CantLoadTrack()
+            elif channel_data["current_track"]:
                 new_cur_track = Track(channel_data["current_track"])
             else:
                 new_cur_track = NoTrack()
